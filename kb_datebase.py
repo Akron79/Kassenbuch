@@ -1,5 +1,6 @@
 import sqlite3 as sl
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 import traceback
 from tkinter.messagebox import showinfo
 import kb_datev_export as datev
@@ -19,7 +20,7 @@ class sqli(sl.Connection):
         else:
             self.con = sl.connect(file_name + '.db')
 
-    def insert_values(self, data, sql):
+    def insert_or_update_values(self, data, sql):
         try:
             print('try to insert values...')
             self.con.execute(sql, data)
@@ -70,7 +71,7 @@ class sqli(sl.Connection):
                 raise KeineDaten
             else:
                 # print('Daten gefunden-')
-                data = rec[0]          
+                data = rec[0]
             return data
         except KeineDaten:
              pass
@@ -98,13 +99,13 @@ class sqli(sl.Connection):
         sql = f'INSERT INTO steuersaetze ( Steuersatz, Bezeichnung) values(?, ?)'
         
         data = [ 0, 'ohne Steuer']
-        self.insert_values(data, sql)    
+        self.insert_or_update_values(data, sql)    
         
         data = [ 7, 'Lebensmittel']
-        self.insert_values(data, sql)    
+        self.insert_or_update_values(data, sql)    
         
         data = [19, 'Sonstiges']
-        self.insert_values(data, sql)    
+        self.insert_or_update_values(data, sql)    
         
     def create_kostenstellen(self):
         with self.con:
@@ -119,49 +120,49 @@ class sqli(sl.Connection):
         sql = f'INSERT INTO kostenstellen ( Kostenstelle, Bezeichnung) values(?, ?)'
         
         data = ['100', 'Sonstiges']
-        self.insert_values(data, sql)    
+        self.insert_or_update_values(data, sql)    
         
         data = ['101', 'Lebensmittel']
-        self.insert_values(data, sql)    
+        self.insert_or_update_values(data, sql)    
         
         data = ['102', 'Getränke']
-        self.insert_values(data, sql)    
+        self.insert_or_update_values(data, sql)    
         
         data = ['103', 'Putzmittel']
-        self.insert_values(data, sql)    
+        self.insert_or_update_values(data, sql)    
         
         data = ['104', 'Küchenbedarf']
-        self.insert_values(data, sql)    
+        self.insert_or_update_values(data, sql)    
               
         data = ['105', 'Klopapier']
-        self.insert_values(data, sql)    
+        self.insert_or_update_values(data, sql)    
 
         data = ['106', 'Umsatz']
-        self.insert_values(data, sql)    
+        self.insert_or_update_values(data, sql)    
         
         data = ['107', 'Pfand/Umsatz']
-        self.insert_values(data, sql)    
+        self.insert_or_update_values(data, sql)    
 
         data = ['108', 'Gutschein/Umsatz']
-        self.insert_values(data, sql)    
+        self.insert_or_update_values(data, sql)    
 
         data = ['109', 'Bürobedarf']
-        self.insert_values(data, sql)    
+        self.insert_or_update_values(data, sql)    
 
         data = ['110', 'Reparaturbedarf']
-        self.insert_values(data, sql)    
+        self.insert_or_update_values(data, sql)    
 
         data = ['111', 'Tanken']
-        self.insert_values(data, sql)    
+        self.insert_or_update_values(data, sql)    
 
         data = ['112', 'Autowerkstatt']
-        self.insert_values(data, sql)    
+        self.insert_or_update_values(data, sql)    
 
         data = ['113', 'Dekobedarf']
-        self.insert_values(data, sql)    
+        self.insert_or_update_values(data, sql)    
 
         data = ['114', 'Cateringbedarf']
-        self.insert_values(data, sql)    
+        self.insert_or_update_values(data, sql)    
         
 
     def create_table(self, tabel_name):
@@ -198,7 +199,7 @@ class sqli(sl.Connection):
     def add_buchung(self, tabel_name, d_tag, b_zugang, f_betrag, i_steuersatz, t_kostenstelle, t_bem):
         sql = f'INSERT INTO {tabel_name} ( Buchungstag, Zugang, Betrag, Steuersatz, Kostenstelle, Bemerkung, Zeitstempel) values(?, ?, ?, ?, ?, ?, ?)'
         data = [d_tag, b_zugang, f_betrag, i_steuersatz, t_kostenstelle, t_bem, datetime.now()]
-        self.insert_values(data, sql)
+        self.insert_or_update_values(data, sql)
 
     def get_last15(self, tabel_name):
         with self.con:
@@ -230,10 +231,13 @@ class sqli(sl.Connection):
             return data
 
     def create_datev(self, Monat, Jahr):
+        print('Start: create datev')
         d_ErsterDesMonats = datetime(Jahr, Monat, 1)
-        d_letzterDesMonats = d_ErsterDesMonats.replace(month=Monat +1) - timedelta(days=1) 
+        print(f'''hier {d_ErsterDesMonats}''')
+        d_letzterDesMonats = d_ErsterDesMonats + relativedelta(months=+1) - timedelta(days=1)
+        print(f'''hier {d_letzterDesMonats}''')
         d_ErsterDesJahres = d_ErsterDesMonats.replace(month=1)
-
+        
         s_ErsterDesMonats = d_ErsterDesMonats.strftime("%Y%m%d")
         s_letzterDesMonats = d_letzterDesMonats.strftime("%Y%m%d")
         s_ErsterDesJahres = d_ErsterDesJahres.strftime("%Y%m%d")
@@ -262,10 +266,10 @@ class sqli(sl.Connection):
                    ,'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	''
                    ,'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	''
                    ,'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'','']
-            self.insert_values(data, sql)
+            self.insert_or_update_values(data, sql)
             data = ['Umsatz (ohne Soll/Haben-Kz)',	'Soll/Haben-Kennzeichen',	'WKZ Umsatz',	'Kurs',	'Basis-Umsatz',	'WKZ Basis-Umsatz',	'Konto',	'Gegenkonto (ohne BU-Schlüssel)',	'BU-Schlüssel',	'Belegdatum',	'Belegfeld 1',	'Belegfeld 2',	'Skonto',	'Buchungstext',	'Postensperre',	'Diverse Adressnummer',	'Geschäftspartnerbank',	'Sachverhalt',	'Zinssperre',	'Beleglink',	'Beleginfo - Art 1',	'Beleginfo - Inhalt 1',	'Beleginfo - Art 2',	'Beleginfo - Inhalt 2',	'Beleginfo - Art 3',	'Beleginfo - Inhalt 3',	'Beleginfo - Art 4',	'Beleginfo - Inhalt 4',	'Beleginfo - Art 5',	'Beleginfo - Inhalt 5',	'Beleginfo - Art 6',	'Beleginfo - Inhalt 6',	'Beleginfo - Art 7',	'Beleginfo - Inhalt 7',	'Beleginfo - Art 8',	'Beleginfo - Inhalt 8',	'KOST1 - Kostenstelle/-träger',	'KOST2 - Kostenstelle/-träger',	'Menge1 - Wert',	'EU-Land u. UStID',	'EU-Steuersatz',	'Abw. Versteuerungsart',	'Sachverhalt L+L',	'Funktionsergänzung L+L',	'BU 49 Hauptfunktionstyp',	'BU 49 Hauptfunktionsnummer',	'BU 49 Funktionsergänzung',	'Zusatzinformation - Art 1',	'Zusatzinformation - Inhalt 1',	'Zusatzinfor-mation - Art 2',	'Zusatzinformation - Inhalt 2',	'Zusatzinformation - Art 3',	'Zusatzinformation - Inhalt 3',	'Zusatzinformation - Art 4',	'Zusatzinformation - Inhalt 4',	'Zusatzinformation - Art 5',	'Zusatzinformation - Inhalt 5',	'Zusatzinformation - Art 6',	'Zusatzinformation - Inhalt 6',	'Zusatzinformation - Art 7',	'Zusatzinformation - Inhalt 7',	'Zusatzinfor-mation - Art 8',	'Zusatzinformation - Inhalt 8',	'Zusatzinformation - Art 9',	'Zusatzinformation - Inhalt 9',	'Zusatzinformation - Art 10',	'Zusatzinformation - Inhalt 10',	'Zusatzinformation - Art 11',	'Zusatzinformation - Inhalt 11',	'Zusatzinformation - Art 12',	'Zusatzinformation - Inhalt 12',	'Zusatzinformation - Art 13',	'Zusatzinformation - Inhalt 13',	'Zusatzinfor-mation - Art 14',	'Zusatzinformation - Inhalt 14',	'Zusatzinformation - Art 15',	'Zusatzinformation - Inhalt 15',	'Zusatzinformation - Art 16',	'Zusatzinformation - Inhalt 16',	'Zusatzinformation - Art 17',	'Zusatzinformation - Inhalt 17',	'Zusatzinformation - Art 18',	'Zusatzinformation - Inhalt 18',	'Zusatzinformation - Art 19',	'Zusatzinformation - Inhalt 19',	'Zusatzinfor-mation - Art 20',	'Zusatzinformation - Inhalt 20',	'Stück',	'Gewicht',	'Zahlweise',	'Forderungsart',	'Veranlagerungsjahr',	'Zugeordnete Fälligkeit',	'Skontotyp',	'Auftragsnummer',	'Buchungstyp',	'USt-Schlüssel (Anzahlungen)',	'EU-Mitgliedstaat (Anzahlungen)',	'Sachgverhalt L+L (Anzahlungen)',	'EU-Steuersatz (Anzahlungen)',	'Erlöskonto (Anzahlungen)',	'Herkunft-Kz',	'Buchungs-GUID',	'Kost-Datum',	'SEPA-Mandantsreferenz',	'Skontosperre',	'Gesellschaftername',	'Beteiligtennummer',	'Identifikationsnummer',	'Zeichnernummer',	'Postensperre bis',	'Bezeichnung SoBil-Sachverhalt',	'Kennzeichen SoBil-Buchung',	'Festschreibung',	'Leistungsdatum'
                     ,'Datum Zuord. Steuerperiode']
-            self.insert_values(data, sql)
+            self.insert_or_update_values(data, sql)
         except sl.Error as er:
             print('SQLite error: %s' % (' '.join(er.args)))
             print("Exception class is: ", er.__class__)
@@ -389,12 +393,12 @@ ORDER BY kb.Buchungstag
         return round(Summe,2)
 
     def get_endbestand(self, Monat, Jahr, Fehlerausgabe):
-        sql = f"""SELECT Endbestand, ma.Gueltig
+        sql = f"""SELECT 0 + ma.Endbestand, ma.Gueltig
 FROM monatsabschluss ma
 WHERE 1 = 1
-  and ma.Jahr = {Jahr}
-  and ma.Monat = {Monat}
-  and ma.Gueltig = TRUE"""
+  and ma.Gueltig = TRUE
+ORDER BY id desc
+LIMIT 1 """
         try:
            
             Endbestand = self.select_one(sql_text=sql)
